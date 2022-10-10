@@ -9,7 +9,7 @@ const Navigation = () => {
     marginRight: '4px',
   });
 
-  const token = localStorage.getItem("token");
+  const token = getToken();
 
   return (
     <nav
@@ -66,7 +66,7 @@ const Home = () => {
 const Dashboard = () => {
   // let { token } = useAuth();
   
-  const token = localStorage.getItem("token");
+  const token = getToken();
 
   return (
     <>
@@ -92,7 +92,7 @@ const Users = ({ users }) => {
 
   return (
     <>
-      <h2>Users</h2>
+      <h2>Users (Protected)</h2>
 
       <input type="text" value={searchTerm} onChange={handleSearch} />
 
@@ -132,11 +132,29 @@ const User = ({ onRemoveUser }) => {
   );
 };
 
+const Analytics = () => {
+  return (
+    <h2>
+      Analytics (Protected: authenticated user with permission 'analyze' required)
+    </h2>
+  );
+};
+
+const Admiin = () => {
+  return (
+    <h2>
+      Admin (Protected: authenticated user with role 'admin' required)
+    </h2>
+  );
+};
+
 const NoMatch = () => {
   return (
     <p>There's no match: 404!</p>
   );
 };
+
+const getToken = () => localStorage.getItem("token");
 
 const fakeAuth = () => (
   new Promise((resolve) => {
@@ -156,10 +174,10 @@ const AuthProvider = ({ children }) => {
   // const [token, setToken] = React.useState(null);
   
   const handleLogin = async () => {
-    const token = await fakeAuth();
+    const fakeToken = await fakeAuth();
 
     // setToken(token);
-    localStorage.setItem("token", token);
+    localStorage.setItem("token", fakeToken);
 
     // get the last page (location) path before logout 
     const origin = location.state?.from?.pathname || "/dashboard";
@@ -185,28 +203,26 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-const PublicRoute = ({ children }) => {
-  const token = localStorage.getItem("token");
+const PublicRoute = ({ redirectPath = "/dashboard", children }) => {
+  const token = getToken();
   
-  if (token) return <Navigate to="/dashboard" />;
+  if (token) return <Navigate to={redirectPath} />;
 
   return children;
 };
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ redirectPath = "/home", children }) => {
   // let { token } = useAuth();
   // const location = useLocation();
-  const token = localStorage.getItem("token");
-
-  // if (!token) token = localStorage.getItem("token");
+  const token = getToken();
 
   if (!token) {
     // save the current location path (to be used when login to redirect to the last page before logout)
     // return <Navigate to="/home" replace state={{ from: location }} />;
-    return <Navigate to="/home" replace />;
+    return <Navigate to={redirectPath} replace />;
   }
 
-  return children;
+  return children ? children : <Outlet />;
 }
 
 function App() {
@@ -232,7 +248,7 @@ function App() {
           <Route element={<Layout />}>
             <Route index element={<PublicRoute><Home /></PublicRoute>} />
             <Route path="home" element={<PublicRoute><Home /></PublicRoute>} />
-            <Route 
+            {/* <Route 
               path="dashboard" 
               element={<ProtectedRoute><Dashboard /></ProtectedRoute> } 
             />
@@ -241,6 +257,18 @@ function App() {
                 path=":userId" 
                 element={<User onRemoveUser={handleRemoveUser} />} 
               />
+            </Route> */}
+            <Route element={<ProtectedRoute />}>
+              <Route 
+                path="dashboard" 
+                element={<Dashboard />} 
+              />
+              <Route path="users" element={<Users users={users} />}>
+                <Route 
+                  path=":userId" 
+                  element={<User onRemoveUser={handleRemoveUser} />} 
+                />
+              </Route>
             </Route>
             <Route path="*" element={<NoMatch />} />
           </Route>
