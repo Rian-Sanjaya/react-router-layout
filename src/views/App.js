@@ -140,7 +140,7 @@ const Analytics = () => {
   );
 };
 
-const Admiin = () => {
+const Admin = () => {
   return (
     <h2>
       Admin (Protected: authenticated user with role 'admin' required)
@@ -156,6 +156,7 @@ const NoMatch = () => {
 
 const getToken = () => localStorage.getItem("token");
 
+// function to generate fake token
 const fakeAuth = () => (
   new Promise((resolve) => {
     setTimeout(() => resolve("2342f2f1d131rf12"), 250);
@@ -164,6 +165,7 @@ const fakeAuth = () => (
 
 const AuthContext = React.createContext(null);
 
+// return AuthContext context value object
 const useAuth = () => {
   return React.useContext(AuthContext);
 }
